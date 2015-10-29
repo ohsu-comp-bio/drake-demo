@@ -11,7 +11,7 @@ features of Drake!
 
 The workflow is represented as:
 
-![graph](https://raw.github.com/ohsu-computational-biology/drake-demo/master/drake.png)
+![graph](http://i.imgur.com/wrFZEJC.png)
 
 *Hint: You can generate the above graph by cloning the repo and running
 `./drake --graph`!*
