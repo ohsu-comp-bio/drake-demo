@@ -1,0 +1,80 @@
+; Download files
+data/expression.tsv <- [-timecheck]
+  mkdir -p data
+  curl https://dcc.icgc.org/api/v1/download?fn=/current/Projects/ALL-US/exp_array.ALL-US.tsv.gz | gunzip > $OUTPUT
+
+
+data/donors.tsv <-[-timecheck]
+  mkdir -p data
+  curl https://dcc.icgc.org/api/v1/download?fn=/current/Projects/ALL-US/donor.ALL-US.tsv.gz | gunzip > $OUTPUT
+
+
+; Join donor and expression data to use only columns we need
+data/dataset.tsv <- data/expression.tsv, data/donors.tsv [python]
+  import pandas as pd
+
+  # Read in data
+  expression = pd.read_csv("$[INPUT0]", sep="\t", usecols=["icgc_donor_id", "submitted_sample_id", "gene_id", "normalized_expression_value"])
+  donors = pd.read_csv("$[INPUT1]", sep="\t", usecols=["icgc_donor_id", "donor_sex"])
+
+  # Merge our data together and take only one sample-gene pair.
+  output = pd.\
+    merge(donors, expression).\
+    groupby(["submitted_sample_id", "gene_id"]).\
+    first()
+
+  del output["icgc_donor_id"]
+
+  # Write our combined data to output
+  output.to_csv("$[OUTPUT]", sep="\t") 
+
+
+data/expression_matrix.tsv <- data/dataset.tsv [python]
+  import pandas as pd
+
+  input = pd.read_csv("$[INPUT]", sep="\t")
+
+  # Pivot the dataset to create the expression matrix.
+  output = input.\
+    set_index(["donor_sex", "submitted_sample_id", "gene_id"]).\
+    unstack("gene_id")
+
+  output.columns = output.columns.get_level_values(1)
+
+  output.to_csv("$[OUTPUT]", sep="\t")
+
+
+results.png <- data/expression_matrix.tsv [python]
+  import pandas as pd
+
+  # Needed since we're not running an X server
+  import matplotlib
+  matplotlib.use('Agg')
+
+  import seaborn as sns
+
+  import matplotlib.pyplot as plt
+  from sklearn import manifold
+
+  input = pd.read_csv("$[INPUT]", sep="\t")
+
+  gender = input.donor_sex
+  del input['donor_sex']
+  del input['submitted_sample_id']
+
+  expression_matrix = input.as_matrix()
+
+  embedder = manifold.TSNE(n_components=2, init='pca', random_state=0)
+
+  X = embedder.fit_transform(expression_matrix)
+
+  results = pd.DataFrame({'gender': gender, 'x': X[:,0], 'y': X[:,1]})
+
+  fig, ax = plt.subplots()
+
+  for name, group in results.groupby('gender'):
+    ax.plot(group.x, group.y, marker='o', linestyle='', label=name)
+
+  ax.legend()
+
+  plt.savefig("$[OUTPUT]")

@@ -1,0 +1,9 @@
+.DS_Store
+.cache
+.drake
+.drakerc
+data/
+drake.log
+results.png
+.bash_history
+
