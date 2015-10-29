@@ -16,6 +16,10 @@ The workflow is represented as:
 *Hint: You can generate the above graph by cloning the repo and running
 `./drake --graph`!*
 
+The final output of the workflow is:
+
+![output](http://i.imgur.com/mW3yc2p.png)
+
 ## Key Concepts ##
 
 1. **No dependencies**. All you need is Docker.
