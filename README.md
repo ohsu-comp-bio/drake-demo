@@ -3,7 +3,11 @@
 This project uses [Drake](https://github.com/Factual/drake) and
 [Docker](https://docker.com) to fetch data from the
 [ICGC Data Portal](https://dcc.icgc.org/repository) and analyzes
-gene expression data for clusters.
+gene expression data for clusters. This performs 
+[t-Distributed Stochastic Neighbor Embedding
+(t-SNE)](http://lvdmaaten.github.io/tsne/) on gene expression data, group by
+gender. We don't necessarily see any clustering, but it highlights some of the
+features of Drake!
 
 The workflow is represented as:
 
