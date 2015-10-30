@@ -1,3 +1,5 @@
+*It's like having a Galaxy in the command-line!*
+
 ## Sample Drake Workfow ##
 
 This project uses [Drake](https://github.com/Factual/drake) and
