@@ -9,6 +9,8 @@ gene expression data for clusters. This performs
 gender. We don't necessarily see any clustering, but it highlights some of the
 features of Drake!
 
+Take a look at `Drakefile` to see how the workflow is implemented.
+
 The workflow is represented as:
 
 ![graph](http://i.imgur.com/wrFZEJC.png)

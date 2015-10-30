@@ -1,4 +1,7 @@
-; Download files
+; Download expression and donor data. Note that we use "-timecheck" to disable
+; timechecking. Since there are no dependencies for this task, Drake will
+; download expression data from ICGC each time. By disabling this feature,
+; Drake will only run this task if the output file doesn't exist.
 data/expression.tsv <- [-timecheck]
   mkdir -p data
   curl https://dcc.icgc.org/api/v1/download?fn=/current/Projects/ALL-US/exp_array.ALL-US.tsv.gz | gunzip > $OUTPUT
@@ -9,7 +12,11 @@ data/donors.tsv <-[-timecheck]
   curl https://dcc.icgc.org/api/v1/download?fn=/current/Projects/ALL-US/donor.ALL-US.tsv.gz | gunzip > $OUTPUT
 
 
-; Join donor and expression data to use only columns we need
+; Join donor and expression data to use only columns we need. Note that we can
+; pass in multiple upstream datasets to this task, and Drake will properly
+; resolve dependencies. Also, we're using the Python protocol to work directly
+; with the data. Drake will interpolate the script by converting text like
+; $[INPUT0] to the name of the file that's being passed in.
 data/dataset.tsv <- data/expression.tsv, data/donors.tsv [python]
   import pandas as pd
 
@@ -39,20 +46,24 @@ data/expression_matrix.tsv <- data/dataset.tsv [python]
     set_index(["donor_sex", "submitted_sample_id", "gene_id"]).\
     unstack("gene_id")
 
+  # We need to flatten the hierarchy of our columns so that we get
+  # gene names as our column headers
   output.columns = output.columns.get_level_values(1)
 
   output.to_csv("$[OUTPUT]", sep="\t")
 
 
+; One pro-tip here is that using Matplotlib in a Docker container can be
+; finicky since we're not running an X11 server. Make sure to use the Agg
+; engine before importing Seaborn or PyPlot.
 results.png <- data/expression_matrix.tsv [python]
   import pandas as pd
 
-  # Needed since we're not running an X server
+  # See note above!
   import matplotlib
   matplotlib.use('Agg')
 
   import seaborn as sns
-
   import matplotlib.pyplot as plt
   from sklearn import manifold
 
