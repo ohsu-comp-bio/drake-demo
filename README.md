@@ -38,7 +38,9 @@ The final output of the workflow is:
    workflow. Combining this with the isolation of Docker containers, you can
    ensure that collaborators get the same results.
 
-**How is this achieved?**
+*How is this achieved?*
+
+**We're running Drake inside of Docker.**
 
 First, we leverage IPython's [scipystack](http://www.scipy.org/stackspec.html)
 image that provides us the base tools we need for our analysis. Dependencies
