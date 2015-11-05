@@ -1,0 +1,12 @@
+data1.csv <- [-timecheck python]
+  import numpy as np
+  data = np.random.random((10, 2))
+  np.savetxt("$[OUTPUT]", data, delimiter=",") 
+
+data2.csv <- [-timecheck python]
+  import numpy as np
+  data = np.random.random((10, 2))
+  np.savetxt("$[OUTPUT]", data, delimiter=",") 
+
+combined.csv <- data1.csv, data2.csv
+  cat $INPUTS > $OUTPUT

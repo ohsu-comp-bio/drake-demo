@@ -2,13 +2,11 @@
 ; timechecking. Since there are no dependencies for this task, Drake will
 ; download expression data from ICGC each time. By disabling this feature,
 ; Drake will only run this task if the output file doesn't exist.
-data/expression.tsv <- [-timecheck]
-  mkdir -p data
+expression.tsv <- [-timecheck]
   curl https://dcc.icgc.org/api/v1/download?fn=/current/Projects/ALL-US/exp_array.ALL-US.tsv.gz | gunzip > $OUTPUT
 
 
-data/donors.tsv <-[-timecheck]
-  mkdir -p data
+donors.tsv <-[-timecheck]
   curl https://dcc.icgc.org/api/v1/download?fn=/current/Projects/ALL-US/donor.ALL-US.tsv.gz | gunzip > $OUTPUT
 
 
@@ -17,7 +15,7 @@ data/donors.tsv <-[-timecheck]
 ; resolve dependencies. Also, we're using the Python protocol to work directly
 ; with the data. Drake will interpolate the script by converting text like
 ; $[INPUT0] to the name of the file that's being passed in.
-data/dataset.tsv <- data/expression.tsv, data/donors.tsv [python]
+dataset.tsv <- expression.tsv, donors.tsv [python]
   import pandas as pd
 
   # Read in data
@@ -36,7 +34,7 @@ data/dataset.tsv <- data/expression.tsv, data/donors.tsv [python]
   output.to_csv("$[OUTPUT]", sep="\t") 
 
 
-data/expression_matrix.tsv <- data/dataset.tsv [python]
+expression_matrix.tsv <- dataset.tsv [python]
   import pandas as pd
 
   input = pd.read_csv("$[INPUT]", sep="\t")
@@ -56,7 +54,7 @@ data/expression_matrix.tsv <- data/dataset.tsv [python]
 ; One pro-tip here is that using Matplotlib in a Docker container can be
 ; finicky since we're not running an X11 server. Make sure to use the Agg
 ; engine before importing Seaborn or PyPlot.
-results.png <- data/expression_matrix.tsv [python]
+clusters.png <- expression_matrix.tsv [python]
   import pandas as pd
 
   # See note above!
@@ -89,3 +87,28 @@ results.png <- data/expression_matrix.tsv [python]
   ax.legend()
 
   plt.savefig("$[OUTPUT]")
+
+structured_heatmap.png <- expression_matrix.tsv [python]
+  import pandas as pd
+
+  # See note above!
+  import matplotlib
+  matplotlib.use('Agg')
+
+  import seaborn as sns
+
+  data = pd.read_csv("$[INPUT]", sep="\t")
+
+  gender = data['donor_sex']
+  del data['donor_sex']
+  del data['submitted_sample_id']
+
+  gender_pal = sns.cubehelix_palette(2)
+  gender_lut = {"male": gender_pal[0], "female": gender_pal[1]}
+  gender_colors = gender.map(gender_lut)
+
+  cmap = sns.diverging_palette(h_neg=210, h_pos=350, s=90, l=30, as_cmap=True)
+
+  sns.clustermap(data.transpose().corr(), row_colors=gender_colors, col_colors=gender_colors, cmap=cmap)
+
+  sns.plt.savefig("$[OUTPUT]")

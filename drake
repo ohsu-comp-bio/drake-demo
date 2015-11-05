@@ -1,1 +1,1 @@
-exec docker run -it -v $(pwd):/root slnovak/drake-scipystack drake "$@"
+exec docker run -it -v $(pwd):/root/workspace slnovak/drake-scipystack drake --base=/root/workspace "$@"
