@@ -1,1 +1,1 @@
-exec docker run -it -v $(pwd):/root drake drake "$@"
+exec docker run -it -v $(pwd):/root slnovak/drake-scipystack drake "$@"
